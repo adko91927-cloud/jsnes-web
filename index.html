@@ -1,80 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
     <title>NES Emulator</title>
+    <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
     <style>
         body {
-            background-color: #222;
-            color: #fff;
+            background-color: #111;
+            color: white;
             font-family: Arial, sans-serif;
             text-align: center;
         }
+        canvas {
+            background-color: black;
+            display: block;
+            margin: 20px auto;
+        }
         select, button {
             font-size: 16px;
-            padding: 5px;
-            margin: 10px;
-        }
-        canvas {
-            border: 1px solid #fff;
-            margin-top: 20px;
+            padding: 5px 10px;
         }
     </style>
-    <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
 </head>
 <body>
     <h1>NES Emulator</h1>
-    
-    <!-- ROM selector -->
-    <select id="rom-select">
+    <select id="romSelect">
         <option value="roms/SuperMarioBros.nes">Super Mario Bros</option>
-        <!-- You can add more ROMs below -->
-        <!-- <option value="roms/AnotherGame.nes">Another Game</option> -->
     </select>
-    <button id="load-rom">Load ROM</button>
-
-    <!-- NES Screen -->
-    <div>
-        <canvas id="nes-canvas" width="256" height="240"></canvas>
-    </div>
+    <button id="loadButton">Load ROM</button>
+    <canvas id="nes-canvas" width="256" height="240"></canvas>
 
     <script>
-        const canvas = document.getElementById('nes-canvas');
-        const context = canvas.getContext('2d');
-        const imageData = context.getImageData(0, 0, 256, 240);
-
         const nes = new jsnes.NES({
-            onFrame(frameBuffer) {
+            onFrame: function(frameBuffer) {
+                const imageData = ctx.getImageData(0, 0, 256, 240);
                 for (let i = 0; i < frameBuffer.length; i++) {
-                    imageData.data[i] = frameBuffer[i];
+                    imageData.data[i * 4 + 0] = frameBuffer[i] >> 16 & 0xFF;
+                    imageData.data[i * 4 + 1] = frameBuffer[i] >> 8 & 0xFF;
+                    imageData.data[i * 4 + 2] = frameBuffer[i] & 0xFF;
+                    imageData.data[i * 4 + 3] = 0xFF;
                 }
-                context.putImageData(imageData, 0, 0);
+                ctx.putImageData(imageData, 0, 0);
             },
-            onAudioSample() {}
+            onStatusUpdate: function() {},
+            onAudioSample: function() {}
         });
 
-        function loadROM(url) {
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                    return res.arrayBuffer();
-                })
-                .then(data => {
-                    nes.loadROM(new Uint8Array(data));
-                    frame();
-                })
-                .catch(err => console.error('Error loading ROM:', err));
-        }
+        const canvas = document.getElementById('nes-canvas');
+        const ctx = canvas.getContext('2d');
 
-        function frame() {
-            nes.frame();
-            requestAnimationFrame(frame);
-        }
-
-        document.getElementById('load-rom').addEventListener('click', () => {
-            const romPath = document.getElementById('rom-select').value;
-            loadROM(romPath);
+        document.getElementById('loadButton').addEventListener('click', function() {
+            const romPath = document.getElementById('romSelect').value;
+            fetch(romPath)
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP error ' + response.status);
+                    return response.arrayBuffer();
+                })
+                .then(buffer => {
+                    nes.loadROM(new Uint8Array(buffer));
+                    nes.frame();
+                })
+                .catch(err => alert('Error loading ROM: ' + err.message));
         });
     </script>
 </body>
