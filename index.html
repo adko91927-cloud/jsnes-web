@@ -3,79 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSNES Web Emulator</title>
+    <title>NES Emulator</title>
     <style>
         body {
-            background-color: black;
-            color: white;
+            background-color: #222;
+            color: #fff;
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin-top: 20px;
-        }
-        #nes-canvas {
-            border: 2px solid #fff;
-            margin-top: 20px;
         }
         select, button {
             font-size: 16px;
-            padding: 5px 10px;
+            padding: 5px;
             margin: 10px;
         }
+        canvas {
+            border: 1px solid #fff;
+            margin-top: 20px;
+        }
     </style>
+    <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
 </head>
 <body>
-
-    <h1>JSNES Web Emulator</h1>
-
-    <label for="romSelect">Choose a ROM:</label>
-    <select id="romSelect">
+    <h1>NES Emulator</h1>
+    
+    <!-- ROM selector -->
+    <select id="rom-select">
         <option value="roms/SuperMarioBros.nes">Super Mario Bros</option>
+        <!-- You can add more ROMs below -->
+        <!-- <option value="roms/AnotherGame.nes">Another Game</option> -->
     </select>
-    <button id="loadButton">Load ROM</button>
+    <button id="load-rom">Load ROM</button>
 
-    <canvas id="nes-canvas" width="256" height="240"></canvas>
+    <!-- NES Screen -->
+    <div>
+        <canvas id="nes-canvas" width="256" height="240"></canvas>
+    </div>
 
-    <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
     <script>
-        const canvas = document.getElementById("nes-canvas");
-        const ctx = canvas.getContext("2d");
-        const imageData = ctx.getImageData(0, 0, 256, 240);
+        const canvas = document.getElementById('nes-canvas');
+        const context = canvas.getContext('2d');
+        const imageData = context.getImageData(0, 0, 256, 240);
 
         const nes = new jsnes.NES({
-            onFrame: function(frameBuffer) {
+            onFrame(frameBuffer) {
                 for (let i = 0; i < frameBuffer.length; i++) {
                     imageData.data[i] = frameBuffer[i];
                 }
-                ctx.putImageData(imageData, 0, 0);
+                context.putImageData(imageData, 0, 0);
             },
-            onStatusUpdate: console.log,
-            onAudioSample: function() {}
+            onAudioSample() {}
         });
 
         function loadROM(url) {
             fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error("ROM not found");
-                    return response.arrayBuffer();
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                    return res.arrayBuffer();
                 })
                 .then(data => {
                     nes.loadROM(new Uint8Array(data));
+                    frame();
                 })
-                .catch(err => {
-                    console.error(err);
-                    alert("Failed to load ROM: " + err.message);
-                });
+                .catch(err => console.error('Error loading ROM:', err));
         }
 
-        document.getElementById("loadButton").addEventListener("click", function() {
-            const romPath = document.getElementById("romSelect").value;
+        function frame() {
+            nes.frame();
+            requestAnimationFrame(frame);
+        }
+
+        document.getElementById('load-rom').addEventListener('click', () => {
+            const romPath = document.getElementById('rom-select').value;
             loadROM(romPath);
         });
     </script>
-
 </body>
 </html>
