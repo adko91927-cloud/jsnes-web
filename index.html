@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSNES Web</title>
     <base href="./">
-<base href="/jsnes-web/">
+
     <!-- Styles -->
-    <link rel="stylesheet" href="./static/css/style.css">
+    <link rel="stylesheet" href="./static/css/main.65ccd9f3.css">
 </head>
 <body>
     <h1>JSNES Web Emulator</h1>
@@ -21,46 +21,11 @@
         <select id="rom-select">
             <option value="">-- Select --</option>
             <option value="./roms/mario.nes">Super Mario Bros</option>
-            <option value="./roms/zelda.nes">The Legend of Zelda</option>
-            <!-- Add more ROMs here -->
         </select>
         <button id="load-rom">Load ROM</button>
     </div>
 
-    <!-- JSNES Library -->
-    <script src="./static/js/jsnes.min.js"></script>
-
-    <!-- Your App Script -->
-    <script>
-    const nes = new jsnes.NES({
-        onFrame: function(frameBuffer) {
-            const canvas = document.getElementById('nes-canvas');
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, 256, 240);
-            let data = imageData.data;
-            for (let i = 0; i < frameBuffer.length; i++) {
-                data[i] = frameBuffer[i];
-            }
-            ctx.putImageData(imageData, 0, 0);
-        },
-        onStatusUpdate: function(message) {
-            console.log(message);
-        }
-    });
-
-    function loadROM(url) {
-        fetch(url)
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-                nes.loadROM(new Uint8Array(buffer));
-                nes.frame();
-            });
-    }
-
-    document.getElementById('load-rom').addEventListener('click', () => {
-        const romPath = document.getElementById('rom-select').value;
-        if (romPath) loadROM(romPath);
-    });
-    </script>
+    <!-- Scripts -->
+    <script src="./static/js/main.dbf2e7eb.js"></script>
 </body>
 </html>
